@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Momentos de Vida Empresariais</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            transform: translateY(-2px);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .metric-card {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .metric-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-size: 1.1rem;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .cluster-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .cluster-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .cluster-card.inicio {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .cluster-card.expansao {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .cluster-card.maturidade {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .cluster-card.declinio {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        .cluster-card h4 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+
+        .cluster-stat {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .feature-importance {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .feature-bar {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+        }
+
+        .feature-name {
+            width: 150px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .feature-progress {
+            flex: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+
+        .feature-progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .feature-score {
+            font-weight: 700;
+            color: #667eea;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .quality-indicator {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .quality-excellent {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .quality-good {
+            background: #3498db;
+            color: white;
+        }
+
+        .quality-regular {
+            background: #f39c12;
+            color: white;
+        }
+
+        .strategies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .strategy-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .strategy-card h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .strategy-item {
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .strategy-label {
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .strategy-value {
+            color: #7f8c8d;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .alert-info {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid #3498db;
+            color: #2980b9;
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 40px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .footer p {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏢 Dashboard - Momentos de Vida Empresariais</h1>
+            <p>Sistema de Análise Inteligente para Segmentação de Empresas</p>
+            <p><strong>Challenge FIAP — Santander</strong></p>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('overview')">📊 Visão Geral</button>
+                <button class="nav-tab" onclick="showTab('clusters')">🎯 Clusters</button>
+                <button class="nav-tab" onclick="showTab('analytics')">📈 Analytics</button>
+                <button class="nav-tab" onclick="showTab('strategies')">💼 Estratégias</button>
+                <button class="nav-tab" onclick="showTab('model')">🤖 Modelo</button>
+            </div>
+        </div>
+
+        <!-- Tab: Visão Geral -->
+        <div id="overview" class="tab-content active">
+            <div class="dashboard-grid kpi-grid">
+                <div class="card metric-card">
+                    <div class="metric-value">200</div>
+                    <div class="metric-label">📊 Empresas Analisadas</div>
+                </div>
+                <div class="card metric-card">
+                    <div class="metric-value">4</div>
+                    <div class="metric-label">🎯 Momentos de Vida</div>
+                </div>
+                <div class="card metric-card">
+                    <div class="metric-value">0.742</div>
+                    <div class="metric-label">✅ Qualidade (Silhouette)</div>
+                </div>
+                <div class="card metric-card">
+                    <div class="metric-value">20+</div>
+                    <div class="metric-label">🔍 Features Analisadas</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>📊 Distribuição por Momento de Vida</h3>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>💰 Receita Média por Cluster</h3>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📈 Evolução da Qualidade do Modelo</h3>
+                    <div class="chart-container">
+                        <canvas id="qualityChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🎯 Status do Sistema</h3>
+                    <div style="padding: 20px;">
+                        <div class="alert alert-info">
+                            <strong>✅ Sistema Operacional</strong><br>
+                            Última atualização: Maio 2025<br>
+                            Modelo: K-Means Otimizado<br>
+                            Qualidade: <span class="quality-indicator quality-excellent">EXCELENTE</span>
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <div><strong>📊 Total de Transações:</strong> 12,450</div>
+                            <div><strong>📅 Período Analisado:</strong> 6 meses</div>
+                            <div><strong>🔄 Tempo de Processamento:</strong> 4.2 min</div>
+                            <div><strong>💾 Acurácia Validação:</strong> 87.5%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Clusters -->
+        <div id="clusters" class="tab-content">
+            <div class="cluster-info">
+                <div class="cluster-card inicio">
+                    <h4>🌱 INÍCIO</h4>
+                    <div class="cluster-stat"><span>Empresas:</span><span>50 (25%)</span></div>
+                    <div class="cluster-stat"><span>Receita Média:</span><span>R$ 12,500</span></div>
+                    <div class="cluster-stat"><span>Transações:</span><span>7/mês</span></div>
+                    <div class="cluster-stat"><span>Saldo Médio:</span><span>R$ 2,100</span></div>
+                    <div class="cluster-stat"><span>Score Risco:</span><span>6.2/10</span></div>
+                </div>
+
+                <div class="cluster-card expansao">
+                    <h4>🚀 EXPANSÃO</h4>
+                    <div class="cluster-stat"><span>Empresas:</span><span>70 (35%)</span></div>
+                    <div class="cluster-stat"><span>Receita Média:</span><span>R$ 37,800</span></div>
+                    <div class="cluster-stat"><span>Transações:</span><span>17/mês</span></div>
+                    <div class="cluster-stat"><span>Saldo Médio:</span><span>R$ 8,200</span></div>
+                    <div class="cluster-stat"><span>Score Risco:</span><span>4.1/10</span></div>
+                </div>
+
+                <div class="cluster-card maturidade">
+                    <h4>🏆 MATURIDADE</h4>
+                    <div class="cluster-stat"><span>Empresas:</span><span>60 (30%)</span></div>
+                    <div class="cluster-stat"><span>Receita Média:</span><span>R$ 95,200</span></div>
+                    <div class="cluster-stat"><span>Transações:</span><span>26/mês</span></div>
+                    <div class="cluster-stat"><span>Saldo Médio:</span><span>R$ 18,500</span></div>
+                    <div class="cluster-stat"><span>Score Risco:</span><span>2.3/10</span></div>
+                </div>
+
+                <div class="cluster-card declinio">
+                    <h4>⚠️ DECLÍNIO</h4>
+                    <div class="cluster-stat"><span>Empresas:</span><span>20 (10%)</span></div>
+                    <div class="cluster-stat"><span>Receita Média:</span><span>R$ 18,700</span></div>
+                    <div class="cluster-stat"><span>Transações:</span><span>5/mês</span></div>
+                    <div class="cluster-stat"><span>Saldo Médio:</span><span>-R$ 3,200</span></div>
+                    <div class="cluster-stat"><span>Score Risco:</span><span>8.7/10</span></div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>📊 Comparativo de Métricas</h3>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3>💧 Liquidez por Cluster</h3>
+                    <div class="chart-container">
+                        <canvas id="liquidityChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🎯 Matriz de Risco x Maturidade</h3>
+                    <div class="chart-container">
+                        <canvas id="scatterChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📈 Crescimento por Período</h3>
+                    <div class="chart-container">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Analytics -->
+        <div id="analytics" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>🔍 Top 10 Features Mais Importantes</h3>
+                    <div class="feature-importance">
+                        <div class="feature-bar">
+                            <div class="feature-name">Total Receita</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 100%"></div>
+                            </div>
+                            <div class="feature-score">0.185</div>
+                        </div>
+                        <div class="feature-bar">
+                            <div class="feature-name">Liquidez</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 92%"></div>
+                            </div>
+                            <div class="feature-score">0.171</div>
+                        </div>
+                        <div class="feature-bar">
+                            <div class="feature-name">Maturidade Score</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 85%"></div>
+                            </div>
+                            <div class="feature-score">0.158</div>
+                        </div>
+                        <div class="feature-bar">
+                            <div class="feature-name">Risco Score</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 78%"></div>
+                            </div>
+                            <div class="feature-score">0.145</div>
+                        </div>
+                        <div class="feature-bar">
+                            <div class="feature-name">Qtd Transações</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 71%"></div>
+                            </div>
+                            <div class="feature-score">0.132</div>
+                        </div>
+                        <div class="feature-bar">
+                            <div class="feature-name">Saldo Líquido</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 64%"></div>
+                            </div>
+                            <div class="feature-score">0.119</div>
+                        </div>
+                        <div class="feature-bar">
+                            <div class="feature-name">Atividade</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 57%"></div>
+                            </div>
+                            <div class="feature-score">0.106</div>
+                        </div>
+                        <div class="feature-bar">
+                            <div class="feature-name">Estabilidade</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 50%"></div>
+                            </div>
+                            <div class="feature-score">0.093</div>
+                        </div>
+                        <div class="feature-bar">
+                            <div class="feature-name">Crescimento Score</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 43%"></div>
+                            </div>
+                            <div class="feature-score">0.080</div>
+                        </div>
+                        <div class="feature-bar">
+                            <div class="feature-name">Ticket Médio</div>
+                            <div class="feature-progress">
+                                <div class="feature-progress-fill" style="width: 36%"></div>
+                            </div>
+                            <div class="feature-score">0.067</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Métricas de Qualidade</h3>
+                    <div class="chart-container">
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🔄 Performance dos Algoritmos</h3>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <strong>🥇 K-Means</strong>
+                            <div style="margin: 5px 0;">Silhouette: 0.742</div>
+                            <div style="margin: 5px 0;">Calinski-Harabasz: 1,247.3</div>
+                            <div style="margin: 5px 0;">Score Combinado: 0.891</div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>🥈 Agglomerative</strong>
+                            <div style="margin: 5px 0;">Silhouette: 0.698</div>
+                            <div style="margin: 5px 0;">Calinski-Harabasz: 1,089.7</div>
+                            <div style="margin: 5px 0;">Score Combinado: 0.826</div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>🥉 Gaussian Mixture</strong>
+                            <div style="margin: 5px 0;">Silhouette: 0.645</div>
+                            <div style="margin: 5px 0;">Calinski-Harabasz: 923.1</div>
+                            <div style="margin: 5px 0;">Score Combinado: 0.754</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📈 Análise de Variância</h3>
+                    <div class="chart-container">
+                        <canvas id="varianceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Estratégias -->
+        <div id="strategies" class="tab-content">
+            <div class="strategies-grid">
+                <div class="strategy-card">
+                    <h4>🌱 Estratégia INÍCIO</h4>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Produtos:</span>
+                        <span class="strategy-value">Conta PJ Básica, PIX Empresarial, Cartão de Crédito</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Abordagem:</span>
+                        <span class="strategy-value">Educacional e de Relacionamento</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Canal:</span>
+                        <span class="strategy-value">Digital + Suporte Telefônico</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Objetivo:</span>
+                        <span class="strategy-value">Fidelização e crescimento da transacionalidade</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">ROI Projetado:</span>
+                        <span class="strategy-value">300% (R$ 40,000 investimento)</span>
+                    </div>
+                </div>
+
+                <div class="strategy-card">
+                    <h4>🚀 Estratégia EXPANSÃO</h4>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Produtos:</span>
+                        <span class="strategy-value">Capital de Giro, Antecipação de Recebíveis, Financiamento</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Abordagem:</span>
+                        <span class="strategy-value">Comercial Proativa</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Canal:</span>
+                        <span class="strategy-value">Gerente de Conta + Digital</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Objetivo:</span>
+                        <span class="strategy-value">Suporte ao crescimento e aumento da receita</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">ROI Projetado:</span>
+                        <span class="strategy-value">300% (R$ 175,000 investimento)</span>
+                    </div>
+                </div>
+
+                <div class="strategy-card">
+                    <h4>🏆 Estratégia MATURIDADE</h4>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Produtos:</span>
+                        <span class="strategy-value">Investimentos, Seguros Empresariais, Produtos Premium</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Abordagem:</span>
+                        <span class="strategy-value">Consultiva e de Alto Valor</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Canal:</span>
+                        <span class="strategy-value">Private Banking + Assessoria</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Objetivo:</span>
+                        <span class="strategy-value">Maximizar rentabilidade e retenção</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">ROI Projetado:</span>
+                        <span class="strategy-value">200% (R$ 120,000 investimento)</span>
+                    </div>
+                </div>
+
+                <div class="strategy-card">
+                    <h4>⚠️ Estratégia DECLÍNIO</h4>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Produtos:</span>
+                        <span class="strategy-value">Renegociação de Dívidas, Consultoria Financeira, Microcrédito</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Abordagem:</span>
+                        <span class="strategy-value">Suporte e Recuperação</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Canal:</span>
+                        <span class="strategy-value">Especialista em Reestruturação</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">Objetivo:</span>
+                        <span class="strategy-value">Recuperação financeira e retenção</span>
+                    </div>
+                    <div class="strategy-item">
+                        <span class="strategy-label">ROI Projetado:</span>
+                        <span class="strategy-value">50% (R$ 30,000 investimento)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid" style="margin-top: 30px;">
+                <div class="card">
+                    <h3>💹 Projeção de ROI Total</h3>
+                    <div class="chart-container">
+                        <canvas id="roiChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Distribuição de Investimentos</h3>
+                    <div class="chart-container">
+                        <canvas id="investmentChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🎯 Métricas de Impacto</h3>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <strong>💰 Investimento Total:</strong> R$ 365,000
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>📈 Retorno Projetado:</strong> R$ 915,000
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>🏆 ROI Geral:</strong> 251%
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>👥 Empresas Impactadas:</strong> 200 (100%)
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>⏱️ Tempo de Implementação:</strong> 3-6 meses
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>📊 Taxa de Sucesso Esperada:</strong> 87.5%
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🚀 Próximos Passos</h3>
+                    <div style="padding: 20px;">
+                        <div style="margin: 10px 0; padding: 8px; background: rgba(102, 126, 234, 0.1); border-radius: 5px;">
+                            <strong>1. Implementação Automática</strong><br>
+                            <small>Integrar segmentação em produção</small>
+                        </div>
+                        <div style="margin: 10px 0; padding: 8px; background: rgba(102, 126, 234, 0.1); border-radius: 5px;">
+                            <strong>2. Campanhas Direcionadas</strong><br>
+                            <small>Desenvolver comunicação específica</small>
+                        </div>
+                        <div style="margin: 10px 0; padding: 8px; background: rgba(102, 126, 234, 0.1); border-radius: 5px;">
+                            <strong>3. Treinamento de Equipes</strong><br>
+                            <small>Capacitar times comerciais</small>
+                        </div>
+                        <div style="margin: 10px 0; padding: 8px; background: rgba(102, 126, 234, 0.1); border-radius: 5px;">
+                            <strong>4. Monitoramento Contínuo</strong><br>
+                            <small>Dashboards em tempo real</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Modelo -->
+        <div id="model" class="tab-content">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>🤖 Arquitetura do Modelo</h3>
+                    <div style="padding: 20px;">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <strong>Pipeline de Processamento</strong>
+                        </div>
+                        <div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px;">
+                            <div style="background: #667eea; color: white; padding: 10px; border-radius: 8px; text-align: center; min-width: 120px;">
+                                📊<br>Dados Brutos
+                            </div>
+                            <div style="font-size: 24px;">→</div>
+                            <div style="background: #43e97b; color: white; padding: 10px; border-radius: 8px; text-align: center; min-width: 120px;">
+                                🔧<br>Feature Eng.
+                            </div>
+                            <div style="font-size: 24px;">→</div>
+                            <div style="background: #fa709a; color: white; padding: 10px; border-radius: 8px; text-align: center; min-width: 120px;">
+                                ⚖️<br>Normalização
+                            </div>
+                            <div style="font-size: 24px;">→</div>
+                            <div style="background: #ff9a9e; color: white; padding: 10px; border-radius: 8px; text-align: center; min-width: 120px;">
+                                🎯<br>Clustering
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Seleção do Número de Clusters</h3>
+                    <div class="chart-container">
+                        <canvas id="elbowChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🔧 Parâmetros do Modelo</h3>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <strong>Algoritmo Selecionado:</strong> K-Means
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Número de Clusters:</strong> 4
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Scaler:</strong> RobustScaler
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Random State:</strong> 42
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Max Iterations:</strong> 300
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>N_init:</strong> 20
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Features Utilizadas:</strong> 20+
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Critério de Convergência:</strong> 1e-4
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>✅ Validação do Modelo</h3>
+                    <div style="padding: 20px;">
+                        <div style="margin-bottom: 15px;">
+                            <strong>Silhouette Score:</strong> 
+                            <span class="quality-indicator quality-excellent">0.742 (EXCELENTE)</span>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Calinski-Harabasz:</strong> 1,247.3
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Inércia:</strong> 2,834.7
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Menor Cluster:</strong> 20 empresas
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Balanceamento:</strong> ✅ Adequado
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Tempo de Execução:</strong> 4.2 minutos
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Convergência:</strong> ✅ Atingida
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong>Estabilidade:</strong> ✅ Alta (5 execuções)</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📈 Histórico de Performance</h3>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🔍 Detalhes Técnicos</h3>
+                    <div style="padding: 20px; font-family: monospace; font-size: 0.9rem;">
+                        <div><strong>Versão do Python:</strong> 3.8+</div>
+                        <div><strong>Scikit-learn:</strong> 1.3.0</div>
+                        <div><strong>Pandas:</strong> 1.5.3</div>
+                        <div><strong>NumPy:</strong> 1.24.3</div>
+                        <div><strong>Matplotlib:</strong> 3.7.1</div>
+                        <div><strong>Seaborn:</strong> 0.12.2</div>
+                        <hr style="margin: 15px 0;">
+                        <div><strong>Memória Utilizada:</strong> 147 MB</div>
+                        <div><strong>CPU Usage:</strong> 23%</div>
+                        <div><strong>Datasets Processados:</strong> 1</div>
+                        <div><strong>Features Criadas:</strong> 23</div>
+                        <div><strong>Outliers Removidos:</strong> 12</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <h3>📋 Informações do Dashboard</h3>
+            <p>
+                <strong>Dashboard Protótipo Navegável</strong> desenvolvido para o Challenge FIAP — Santander.<br>
+                Este é um protótipo <strong>NÃO FUNCIONAL</strong> que demonstra a interface e funcionalidades do sistema de análise de momentos de vida empresariais.<br>
+                <strong>Tecnologias:</strong> HTML5, CSS3, JavaScript, Chart.js<br>
+                <strong>Última Atualização:</strong> Maio 2025 | <strong>Versão:</strong> 1.0
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Aguardar carregamento completo do Chart.js
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+            
+            // Configurações globais do Chart.js
+            if (typeof Chart !== 'undefined') {
+                Chart.defaults.responsive = true;
+                Chart.defaults.maintainAspectRatio = false;
+                Chart.defaults.plugins.legend.position = 'top';
+                
+                // Configurações de animação
+                if (Chart.defaults.animation) {
+                    Chart.defaults.animation.duration = 1000;
+                    Chart.defaults.animation.easing = 'easeOutQuart';
+                }
+            }
+
+            // Inicializar gráficos da primeira aba
+            setTimeout(() => {
+                initializeCharts('overview');
+            }, 500);
+        });
+
+        // Função para trocar abas
+        function showTab(tabName) {
+            // Esconder todas as abas
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // Remover classe active de todos os botões
+            const navTabs = document.querySelectorAll('.nav-tab');
+            navTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Mostrar aba selecionada
+            document.getElementById(tabName).classList.add('active');
+            
+            // Ativar botão correspondente
+            event.target.classList.add('active');
+            
+            // Inicializar gráficos quando necessário
+            setTimeout(() => initializeCharts(tabName), 200);
+        }
+
+        // Função para inicializar gráficos
+        function initializeCharts(tabName) {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js não está carregado');
+                return;
+            }
+
+            switch(tabName) {
+                case 'overview':
+                    createDistributionChart();
+                    createRevenueChart();
+                    createQualityChart();
+                    break;
+                case 'clusters':
+                    createRadarChart();
+                    createLiquidityChart();
+                    createScatterChart();
+                    createGrowthChart();
+                    break;
+                case 'analytics':
+                    createMetricsChart();
+                    createVarianceChart();
+                    break;
+                case 'strategies':
+                    createROIChart();
+                    createInvestmentChart();
+                    break;
+                case 'model':
+                    createElbowChart();
+                    createPerformanceChart();
+                    break;
+            }
+        }
+
+        // Gráfico de Distribuição
+        function createDistributionChart() {
+            const canvas = document.getElementById('distributionChart');
+            if (!canvas) return;
+            
+            // Destruir gráfico existente se houver
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Início', 'Expansão', 'Maturidade', 'Declínio'],
+                    datasets: [{
+                        data: [50, 70, 60, 20],
+                        backgroundColor: ['#4facfe', '#43e97b', '#fa709a', '#ff9a9e'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed * 100) / total).toFixed(1);
+                                    return `${context.label}: ${context.parsed} empresas (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Receita
+        function createRevenueChart() {
+            const canvas = document.getElementById('revenueChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Início', 'Expansão', 'Maturidade', 'Declínio'],
+                    datasets: [{
+                        label: 'Receita Média (R$)',
+                        data: [12500, 37800, 95200, 18700],
+                        backgroundColor: ['#4facfe', '#43e97b', '#fa709a', '#ff9a9e'],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Receita: R$ ${context.parsed.y.toLocaleString('pt-BR')}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico de Qualidade
+        function createQualityChart() {
+            const canvas = document.getElementById('qualityChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['K=2', 'K=3', 'K=4', 'K=5', 'K=6'],
+                    datasets: [{
+                        label: 'Silhouette Score',
+                        data: [0.421, 0.589, 0.742, 0.698, 0.634],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Gráfico Radar
+        function createRadarChart() {
+            const canvas = document.getElementById('radarChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Receita', 'Transações', 'Liquidez', 'Maturidade', 'Baixo Risco'],
+                    datasets: [
+                        {
+                            label: 'Início',
+                            data: [2, 2, 3, 2, 2],
+                            borderColor: '#4facfe',
+                            backgroundColor: 'rgba(79, 172, 254, 0.2)',
+                            pointBackgroundColor: '#4facfe'
+                        },
+                        {
+                            label: 'Expansão',
+                            data: [4, 4, 4, 3, 4],
+                            borderColor: '#43e97b',
+                            backgroundColor: 'rgba(67, 233, 123, 0.2)',
+                            pointBackgroundColor: '#43e97b'
+                        },
+                        {
+                            label: 'Maturidade',
+                            data: [5, 5, 5, 5, 5],
+                            borderColor: '#fa709a',
+                            backgroundColor: 'rgba(250, 112, 154, 0.2)',
+                            pointBackgroundColor: '#fa709a'
+                        },
+                        {
+                            label: 'Declínio',
+                            data: [2, 1, 1, 2, 1],
+                            borderColor: '#ff9a9e',
+                            backgroundColor: 'rgba(255, 154, 158, 0.2)',
+                            pointBackgroundColor: '#ff9a9e'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: { 
+                            beginAtZero: true, 
+                            max: 5,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createLiquidityChart() {
+            const canvas = document.getElementById('liquidityChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Início', 'Expansão', 'Maturidade', 'Declínio'],
+                    datasets: [{
+                        label: 'Liquidez Média',
+                        data: [0.168, 0.217, 0.194, -0.171],
+                        backgroundColor: ['#4facfe', '#43e97b', '#fa709a', '#ff9a9e'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            grid: {
+                                color: function(context) {
+                                    if (context.tick.value === 0) {
+                                        return '#ff0000';
+                                    }
+                                    return '#e0e0e0';
+                                }
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(3);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createScatterChart() {
+            const canvas = document.getElementById('scatterChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Início',
+                            data: [{x: 2.5, y: 6.2}],
+                            backgroundColor: '#4facfe',
+                            pointRadius: 10,
+                            pointHoverRadius: 12
+                        },
+                        {
+                            label: 'Expansão',
+                            data: [{x: 3.2, y: 4.1}],
+                            backgroundColor: '#43e97b',
+                            pointRadius: 10,
+                            pointHoverRadius: 12
+                        },
+                        {
+                            label: 'Maturidade',
+                            data: [{x: 4.8, y: 2.3}],
+                            backgroundColor: '#fa709a',
+                            pointRadius: 10,
+                            pointHoverRadius: 12
+                        },
+                        {
+                            label: 'Declínio',
+                            data: [{x: 2.1, y: 8.7}],
+                            backgroundColor: '#ff9a9e',
+                            pointRadius: 10,
+                            pointHoverRadius: 12
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Score Maturidade' },
+                            min: 0, max: 5
+                        },
+                        y: { 
+                            title: { display: true, text: 'Score Risco' },
+                            min: 0, max: 10
+                        }
+                    }
+                }
+            });
+        }
+
+        function createGrowthChart() {
+            const canvas = document.getElementById('growthChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                    datasets: [
+                        {
+                            label: 'Início',
+                            data: [100, 105, 108, 112, 116, 120],
+                            borderColor: '#4facfe',
+                            backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Expansão',
+                            data: [100, 110, 125, 142, 165, 195],
+                            borderColor: '#43e97b',
+                            backgroundColor: 'rgba(67, 233, 123, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Maturidade',
+                            data: [100, 102, 104, 105, 106, 108],
+                            borderColor: '#fa709a',
+                            backgroundColor: 'rgba(250, 112, 154, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Declínio',
+                            data: [100, 95, 88, 82, 75, 68],
+                            borderColor: '#ff9a9e',
+                            backgroundColor: 'rgba(255, 154, 158, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            title: { display: true, text: 'Índice Base 100' },
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function createMetricsChart() {
+            const canvas = document.getElementById('metricsChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['K-Means', 'Agglomerative', 'Gaussian Mix'],
+                    datasets: [
+                        {
+                            label: 'Silhouette Score',
+                            data: [0.742, 0.698, 0.645],
+                            backgroundColor: '#667eea',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Score Combinado',
+                            data: [0.891, 0.826, 0.754],
+                            backgroundColor: '#43e97b',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 1 }
+                    }
+                }
+            });
+        }
+
+        function createVarianceChart() {
+            const canvas = document.getElementById('varianceChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Feature 1', 'Feature 2', 'Feature 3', 'Feature 4', 'Feature 5', 'Feature 6', 'Feature 7', 'Feature 8', 'Feature 9', 'Feature 10'],
+                    datasets: [{
+                        label: 'Variância Explicada (%)',
+                        data: [18.5, 17.1, 15.8, 14.5, 13.2, 11.9, 10.6, 9.3, 8.0, 6.7],
+                        borderColor: '#fa709a',
+                        backgroundColor: 'rgba(250, 112, 154, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            title: { display: true, text: 'Variância (%)' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createROIChart() {
+            const canvas = document.getElementById('roiChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Início', 'Expansão', 'Maturidade', 'Declínio'],
+                    datasets: [
+                        {
+                            label: 'Investimento (R$)',
+                            data: [40000, 175000, 120000, 30000],
+                            backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Retorno (R$)',
+                            data: [160000, 700000, 360000, 45000],
+                            backgroundColor: 'rgba(67, 233, 123, 0.7)',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': R$ ' + context.parsed.y.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createInvestmentChart() {
+            const canvas = document.getElementById('investmentChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Expansão (48%)', 'Maturidade (33%)', 'Início (11%)', 'Declínio (8%)'],
+                    datasets: [{
+                        data: [175000, 120000, 40000, 30000],
+                        backgroundColor: ['#43e97b', '#fa709a', '#4facfe', '#ff9a9e'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': R$ ' + context.parsed.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createElbowChart() {
+            const canvas = document.getElementById('elbowChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['K=2', 'K=3', 'K=4', 'K=5', 'K=6', 'K=7', 'K=8'],
+                    datasets: [
+                        {
+                            label: 'Inércia',
+                            data: [5234, 3847, 2834, 2456, 2198, 2034, 1923],
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Silhouette Score',
+                            data: [0.421, 0.589, 0.742, 0.698, 0.634, 0.578, 0.523],
+                            borderColor: '#4ecdc4',
+                            backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: 'Número de Clusters'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Inércia' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Silhouette Score' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createPerformanceChart() {
+            const canvas = document.getElementById('performanceChart');
+            if (!canvas) return;
+            
+            if (canvas.chart) {
+                canvas.chart.destroy();
+            }
+
+            const ctx = canvas.getContext('2d');
+            canvas.chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Exec 1', 'Exec 2', 'Exec 3', 'Exec 4', 'Exec 5'],
+                    datasets: [
+                        {
+                            label: 'Silhouette Score',
+                            data: [0.738, 0.742, 0.740, 0.745, 0.741],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Tempo (min)',
+                            data: [4.1, 4.2, 4.0, 4.3, 4.1],
+                            borderColor: '#fa709a',
+                            backgroundColor: 'rgba(250, 112, 154, 0.1)',
+                            tension: 0.4,
+                            yAxisID: 'y1',
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: { display: true, text: 'Silhouette Score' },
+                            min: 0.73, max: 0.75
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: 'Tempo (min)' },
+                            grid: { drawOnChartArea: false },
+                            min: 3.9, max: 4.5
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para simular loading
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 200px;"><div class="loading"></div></div>';
+            }
+        }
+
+        // Verificação e inicialização mais robusta
+        function initializeApp() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js não carregado. Tentando novamente...');
+                setTimeout(initializeApp, 500);
+                return;
+            }
+
+            console.log('✅ Chart.js carregado com sucesso');
+            
+            // Configurar Chart.js
+            try {
+                Chart.defaults.responsive = true;
+                Chart.defaults.maintainAspectRatio = false;
+                
+                if (Chart.defaults.plugins && Chart.defaults.plugins.legend) {
+                    Chart.defaults.plugins.legend.position = 'top';
+                }
+
+                if (Chart.defaults.animation) {
+                    Chart.defaults.animation.duration = 1000;
+                    Chart.defaults.animation.easing = 'easeOutQuart';
+                }
+            } catch (e) {
+                console.warn('Erro ao configurar Chart.js:', e);
+            }
+
+            // Inicializar primeira aba
+            setTimeout(() => {
+                initializeCharts('overview');
+            }, 100);
+
+            // Adicionar interatividade
+            setTimeout(() => {
+                addInteractivity();
+            }, 200);
+        }
+
+        // Função para adicionar interatividade
+        function addInteractivity() {
+            // Adicionar efeito hover aos cards
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+            // Inicializar tooltips customizados
+            initializeTooltips();
+        }
+
+        // Inicializar quando DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+        // Backup: tentar inicializar após carregamento completo da página
+        window.addEventListener('load', function() {
+            setTimeout(initializeApp, 1000);
+        });
+
+        function initializeTooltips() {
+            // Adicionar tooltips aos elementos de métrica
+            const metricValues = document.querySelectorAll('.metric-value');
+            metricValues.forEach(metric => {
+                metric.title = 'Clique para mais detalhes';
+                metric.style.cursor = 'pointer';
+                
+                metric.addEventListener('click', function() {
+                    const label = this.nextElementSibling.textContent;
+                    alert(`Detalhes sobre: ${label}\n\nEste é um protótipo não-funcional. Em produção, este clique abriria uma janela com detalhes específicos da métrica.`);
+                });
+            });
+        }
+
+        // Simular atualizações em tempo real (apenas para demonstração)
+        setInterval(function() {
+            const qualityIndicator = document.querySelector('.quality-excellent');
+            if (qualityIndicator) {
+                qualityIndicator.style.opacity = qualityIndicator.style.opacity === '0.7' ? '1' : '0.7';
+            }
+        }, 3000);
+
+        // Função para exportar dados (simulada)
+        function exportData() {
+            alert('Funcionalidade de exportação não implementada neste protótipo.\n\nEm produção, seria possível exportar:\n• Relatórios em PDF\n• Dados em CSV/Excel\n• Gráficos em PNG/SVG');
+        }
+
+        // Adicionar funcionalidade de busca (simulada)
+        function searchCompany() {
+            const query = prompt('Digite o ID da empresa para buscar:');
+            if (query) {
+                alert(`Buscando empresa ID: ${query}\n\nEsta é uma funcionalidade simulada. Em produção, mostraria:\n• Momento de vida atual\n• Histórico de transições\n• Métricas específicas\n• Recomendações personalizadas`);
+            }
+        }
+
+        // Controle de responsividade
+        window.addEventListener('resize', function() {
+            // Reajustar gráficos quando a tela for redimensionada
+            if (typeof Chart !== 'undefined') {
+                Object.values(Chart.instances).forEach(function(instance) {
+                    if (instance && instance.resize) {
+                        instance.resize();
+                    }
+                });
+            }
+        });
+
+        // Log para debug
+        window.addEventListener('load', function() {
+            console.log('Página carregada completamente');
+            console.log('Chart.js disponível:', typeof Chart !== 'undefined');
+            if (typeof Chart !== 'undefined') {
+                console.log('Versão do Chart.js:', Chart.version);
+            }
+        });
+
+        // Função adicional para forçar re-render dos gráficos
+        function refreshCharts() {
+            const activeTab = document.querySelector('.tab-content.active');
+            if (activeTab) {
+                const tabId = activeTab.id;
+                setTimeout(() => {
+                    initializeCharts(tabId);
+                }, 100);
+            }
+        }
+
+        // Botão para refresh manual (útil para debug)
+        function addRefreshButton() {
+            const header = document.querySelector('.header');
+            if (header) {
+                const refreshBtn = document.createElement('button');
+                refreshBtn.textContent = '🔄 Atualizar Gráficos';
+                refreshBtn.className = 'nav-tab';
+                refreshBtn.style.marginTop = '10px';
+                refreshBtn.onclick = refreshCharts;
+                header.appendChild(refreshBtn);
+            }
+        }
+
+        // Adicionar botão de refresh após carregamento
+        setTimeout(addRefreshButton, 2000);
+
+        // Sistema de fallback para Chart.js
+        function loadChartJSFallback() {
+            console.log('Tentando carregar Chart.js via fallback...');
+            
+            // Remover script anterior se existir
+            const existingScript = document.querySelector('script[src*="chart"]');
+            if (existingScript) {
+                existingScript.remove();
+            }
+
+            // Carregar nova versão
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
+            script.crossOrigin = 'anonymous';
+            
+            script.onload = function() {
+                console.log('✅ Chart.js carregado via fallback');
+                setTimeout(() => {
+                    initializeApp();
+                }, 500);
+            };
+
+            script.onerror = function() {
+                console.error('❌ Falha ao carregar Chart.js');
+                showChartError();
+            };
+
+            document.head.appendChild(script);
+        }
+
+        // Mostrar erro se Chart.js não carregar
+        function showChartError() {
+            const containers = document.querySelectorAll('.chart-container');
+            containers.forEach(container => {
+                container.innerHTML = `
+                    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 300px; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">📊</div>
+                        <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px;">Gráfico Indisponível</div>
+                        <div style="font-size: 14px; text-align: center;">
+                            Este é um protótipo não-funcional.<br>
+                            Em produção, este gráfico seria exibido normalmente.
+                        </div>
+                        <button onclick="location.reload()" style="margin-top: 15px; padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            🔄 Tentar Novamente
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        // Verificação final após 3 segundos
+        setTimeout(() => {
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js ainda não carregado após 3s. Tentando fallback...');
+                loadChartJSFallback();
+            } else {
+                console.log('✅ Chart.js funcionando normalmente');
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
