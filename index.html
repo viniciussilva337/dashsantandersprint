@@ -19,10 +19,58 @@
             color: #333;
         }
 
-        /* ... rest of the existing CSS ... */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ... Resto do CSS ... */
     </style>
 </head>
 <body>
-    <!-- ... rest of the existing HTML and JavaScript ... -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏢 Dashboard - Momentos de Vida Empresariais</h1>
+            <p>Sistema de Análise Inteligente para Segmentação de Empresas</p>
+            <p><strong>Challenge FIAP — Santander</strong></p>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('overview')">📊 Visão Geral</button>
+                <button class="nav-tab" onclick="showTab('clusters')">🎯 Clusters</button>
+                <button class="nav-tab" onclick="showTab('analytics')">📈 Analytics</button>
+                <button class="nav-tab" onclick="showTab('strategies')">💼 Estratégias</button>
+                <button class="nav-tab" onclick="showTab('model')">🤖 Modelo</button>
+            </div>
+        </div>
+
+        <!-- ... Resto do HTML ... -->
+
+        <!-- Footer -->
+        <div class="footer">
+            <h3>📋 Informações do Dashboard</h3>
+            <p>
+                <strong>Dashboard Protótipo Navegável</strong> desenvolvido para o Challenge FIAP — Santander.<br>
+                Este é um protótipo <strong>NÃO FUNCIONAL</strong> que demonstra a interface e funcionalidades do sistema de análise de momentos de vida empresariais.<br>
+                <strong>Tecnologias:</strong> HTML5, CSS3, JavaScript, Chart.js<br>
+                <strong>Última Atualização:</strong> Maio 2025 | <strong>Versão:</strong> 1.0
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ... Todo o JavaScript ...
+    </script>
 </body>
 </html> 
